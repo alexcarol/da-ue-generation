@@ -75,19 +75,14 @@ function scanForUninstrumentedContent() {
 
 function buildPreflightReport(issues) {
   const grouped = {};
-  issues.forEach(({ blockName, uninstrumented }) => {
-    if (!grouped[blockName]) grouped[blockName] = [];
-    uninstrumented.forEach(({ description }) => grouped[blockName].push(description));
+  issues.forEach(({ blockName }) => {
+    grouped[blockName] = (grouped[blockName] || 0) + 1;
   });
 
-  const lines = ['Content NOT covered by UE models (will be lost on save):\n'];
-  Object.entries(grouped).forEach(([name, items]) => {
-    const count = items.length;
-    const preview = items.slice(0, 2).join(', ');
-    const more = count > 2 ? ` (+${count - 2} more)` : '';
-    lines.push(`  ${name}: ${preview}${more}`);
-  });
-  return lines.join('\n');
+  const summary = Object.entries(grouped)
+    .map(([name, count]) => `${name} (${count})`)
+    .join(', ');
+  return `Blocks with uninstrumented content: ${summary}`;
 }
 
 function buildAEMCoderPrompt(issues) {
@@ -112,7 +107,11 @@ function showPreflightDialog(report, prompt) {
     });
 
     const style = document.createElement('style');
-    style.textContent = '#ue-preflight-dialog { margin-top: 2vh; } #ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); }';
+    style.textContent = `
+      #ue-preflight-dialog { margin-top: 2vh; pointer-events: auto; user-select: text; }
+      #ue-preflight-dialog * { pointer-events: auto; user-select: text; }
+      #ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); pointer-events: auto; }
+    `;
 
     const title = document.createElement('h2');
     title.textContent = 'Content will be lost';
