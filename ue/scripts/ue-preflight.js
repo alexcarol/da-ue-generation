@@ -204,7 +204,7 @@ function showPreflightDialog(report, prompt) {
     actions.append(goBack, continueBtn);
     dialog.append(title, reportPre, promptLabel, promptBox, actions);
     overlay.append(dialog);
-    document.body.append(overlay);
+    document.documentElement.append(overlay);
   });
 }
 
