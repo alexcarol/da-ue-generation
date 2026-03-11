@@ -11,8 +11,6 @@
  */
 
 const SIGNIFICANT_SELECTORS = 'img, h1, h2, h3, h4, h5, h6, p, a';
-const INSTRUMENTATION_TIMEOUT = 10000;
-const SETTLE_DELAY = 500;
 
 function isCovered(node, blockBoundary) {
   let el = node;
@@ -210,44 +208,17 @@ function showPreflightDialog(report, prompt) {
   });
 }
 
-function waitForInstrumentation() {
-  return new Promise((resolve) => {
-    const main = document.querySelector('main');
-    if (!main) {
-      resolve();
-      return;
-    }
-
-    let resolved = false;
-    const done = () => {
-      if (resolved) return;
-      resolved = true;
-      resolve();
-    };
-
-    const poll = () => {
-      if (resolved) return;
-      if (main.querySelector('.block[data-aue-resource]')) {
-        // eslint-disable-next-line no-console
-        console.debug('[ue-preflight] blocks instrumented, settling…');
-        setTimeout(done, SETTLE_DELAY);
-        return;
-      }
-      setTimeout(poll, 200);
-    };
-
-    poll();
-
-    // Fallback timeout — UE framework may not be active
-    setTimeout(() => {
-      // eslint-disable-next-line no-console
-      console.debug('[ue-preflight] timeout waiting for instrumentation');
-      done();
-    }, INSTRUMENTATION_TIMEOUT);
-  });
-}
-
 export default async function runPreflight() {
-  // TEST: always block to verify preflight is running
-  await showPreflightDialog('TEST: Preflight is running', 'This is a test');
+  const blocks = document.querySelectorAll('main .block[data-aue-resource]');
+  // eslint-disable-next-line no-console
+  console.debug(`[ue-preflight] scanning ${blocks.length} instrumented block(s)`);
+
+  const issues = scanForUninstrumentedContent();
+  // eslint-disable-next-line no-console
+  console.debug(`[ue-preflight] found ${issues.length} issue(s)`, issues);
+  if (issues.length === 0) return;
+
+  const report = buildPreflightReport(issues);
+  const prompt = buildAEMCoderPrompt(issues);
+  await showPreflightDialog(report, prompt);
 }

@@ -186,10 +186,15 @@ async function loadPage() {
   loadDelayed();
 }
 
-// UE Editor support before page load
-if (/\.(stage-ue|ue)\.da\.live$/.test(window.location.hostname) || window !== window.parent) {
-  // eslint-disable-next-line import/no-unresolved
-  await import(`${window.hlx.codeBasePath}/ue/scripts/ue.js`).then(({ default: ue }) => ue());
-}
+// UE Editor support — set up observers/handlers before page load
+// eslint-disable-next-line import/no-unresolved
+const ueModule = /\.(stage-ue|ue)\.da\.live$/.test(window.location.hostname) || window !== window.parent
+  ? await import(`${window.hlx.codeBasePath}/ue/scripts/ue.js`).then((mod) => { mod.default(); return mod; })
+  : null;
 
-loadPage();
+await loadPage();
+
+// Run UE preflight after page is fully loaded
+if (ueModule) {
+  ueModule.runPreflight();
+}
