@@ -94,30 +94,22 @@ function buildAEMCoderPrompt(issues) {
 
 function showPreflightDialog(report, prompt) {
   return new Promise((resolve) => {
-    const overlay = document.createElement('div');
-    overlay.id = 'ue-preflight-overlay';
-    Object.assign(overlay.style, {
-      position: 'fixed',
-      inset: '0',
-      zIndex: '99999',
-      background: 'rgba(0, 0, 0, 0.6)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'system-ui, sans-serif',
-    });
-
-    const dialog = document.createElement('div');
+    const dialog = document.createElement('dialog');
+    dialog.id = 'ue-preflight-dialog';
     Object.assign(dialog.style, {
-      background: '#fff',
       borderRadius: '12px',
       padding: '32px',
       maxWidth: '640px',
       width: '90vw',
       maxHeight: '80vh',
       overflow: 'auto',
+      border: 'none',
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+      fontFamily: 'system-ui, sans-serif',
     });
+
+    const style = document.createElement('style');
+    style.textContent = '#ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); }';
 
     const title = document.createElement('h2');
     title.textContent = 'Content will be lost';
@@ -193,18 +185,23 @@ function showPreflightDialog(report, prompt) {
     });
 
     goBack.addEventListener('click', () => {
+      dialog.close();
       window.history.back();
     });
 
     continueBtn.addEventListener('click', () => {
-      overlay.remove();
+      dialog.close();
+      dialog.remove();
       resolve();
     });
 
+    // Prevent closing with Escape — force user to choose
+    dialog.addEventListener('cancel', (e) => e.preventDefault());
+
     actions.append(goBack, continueBtn);
-    dialog.append(title, reportPre, promptLabel, promptBox, actions);
-    overlay.append(dialog);
-    document.documentElement.append(overlay);
+    dialog.append(style, title, reportPre, promptLabel, promptBox, actions);
+    document.body.append(dialog);
+    dialog.showModal();
   });
 }
 
