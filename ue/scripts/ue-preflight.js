@@ -126,30 +126,55 @@ function showPreflightDialog(report, prompt) {
       fontSize: '13px',
       whiteSpace: 'pre-wrap',
       overflow: 'auto',
-      maxHeight: '200px',
+      maxHeight: '120px',
+      margin: '0',
+    });
+
+    const copyReport = document.createElement('button');
+    copyReport.textContent = 'Copy report';
+    Object.assign(copyReport.style, {
+      marginTop: '8px',
+      padding: '6px 16px',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+      background: '#fff',
+      cursor: 'pointer',
+      fontSize: '13px',
+    });
+    copyReport.addEventListener('click', () => {
+      navigator.clipboard.writeText(report).then(() => { copyReport.textContent = 'Copied!'; });
     });
 
     const promptLabel = document.createElement('p');
-    promptLabel.textContent = 'Copy this prompt into AEM Coder to fix the model:';
+    promptLabel.textContent = 'Prompt for AEM Coder to fix the model:';
     Object.assign(promptLabel.style, { margin: '16px 0 8px', fontWeight: '600' });
 
-    const promptBox = document.createElement('textarea');
-    promptBox.value = prompt;
-    promptBox.readOnly = true;
-    Object.assign(promptBox.style, {
-      width: '100%',
-      minHeight: '60px',
-      padding: '12px',
+    const promptPre = document.createElement('pre');
+    promptPre.textContent = prompt;
+    Object.assign(promptPre.style, {
+      background: '#f5f5f5',
+      padding: '16px',
       borderRadius: '8px',
-      border: '1px solid #ccc',
-      fontFamily: 'monospace',
       fontSize: '13px',
-      resize: 'vertical',
-      boxSizing: 'border-box',
+      whiteSpace: 'pre-wrap',
+      overflow: 'auto',
+      maxHeight: '120px',
+      margin: '0',
     });
-    promptBox.addEventListener('click', () => {
-      promptBox.select();
-      navigator.clipboard.writeText(prompt).catch(() => {});
+
+    const copyPrompt = document.createElement('button');
+    copyPrompt.textContent = 'Copy prompt';
+    Object.assign(copyPrompt.style, {
+      marginTop: '8px',
+      padding: '6px 16px',
+      borderRadius: '6px',
+      border: '1px solid #ccc',
+      background: '#fff',
+      cursor: 'pointer',
+      fontSize: '13px',
+    });
+    copyPrompt.addEventListener('click', () => {
+      navigator.clipboard.writeText(prompt).then(() => { copyPrompt.textContent = 'Copied!'; });
     });
 
     const actions = document.createElement('div');
@@ -201,7 +226,16 @@ function showPreflightDialog(report, prompt) {
     dialog.addEventListener('cancel', (e) => e.preventDefault());
 
     actions.append(goBack, continueBtn);
-    dialog.append(style, title, reportPre, promptLabel, promptBox, actions);
+    dialog.append(
+      style,
+      title,
+      reportPre,
+      copyReport,
+      promptLabel,
+      promptPre,
+      copyPrompt,
+      actions,
+    );
     document.body.append(dialog);
     dialog.showModal();
   });
