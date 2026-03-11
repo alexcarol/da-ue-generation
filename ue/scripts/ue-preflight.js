@@ -74,22 +74,25 @@ function scanForUninstrumentedContent() {
 }
 
 function buildPreflightReport(issues) {
-  const lines = ['The following content is NOT covered by UE models and will be lost on save:\n'];
+  const grouped = {};
   issues.forEach(({ blockName, uninstrumented }) => {
-    lines.push(`Block: ${blockName}`);
-    uninstrumented.forEach(({ description }) => {
-      lines.push(`  - ${description}`);
-    });
-    lines.push('');
+    if (!grouped[blockName]) grouped[blockName] = [];
+    uninstrumented.forEach(({ description }) => grouped[blockName].push(description));
+  });
+
+  const lines = ['Content NOT covered by UE models (will be lost on save):\n'];
+  Object.entries(grouped).forEach(([name, items]) => {
+    const count = items.length;
+    const preview = items.slice(0, 2).join(', ');
+    const more = count > 2 ? ` (+${count - 2} more)` : '';
+    lines.push(`  ${name}: ${preview}${more}`);
   });
   return lines.join('\n');
 }
 
 function buildAEMCoderPrompt(issues) {
-  return issues.map(({ blockName, uninstrumented }) => {
-    const details = uninstrumented.map(({ description }) => description).join(' and ');
-    return `Run /ue-enable ${blockName} — the ${blockName} block has uninstrumented content: ${details} are not covered by the UE model and will be lost on save.`;
-  }).join('\n');
+  const blockNames = [...new Set(issues.map(({ blockName }) => blockName))];
+  return blockNames.map((name) => `Run /ue-enable ${name}`).join('\n');
 }
 
 function showPreflightDialog(report, prompt) {
@@ -101,7 +104,7 @@ function showPreflightDialog(report, prompt) {
       padding: '32px',
       maxWidth: '640px',
       width: '90vw',
-      maxHeight: '80vh',
+      maxHeight: '500px',
       overflow: 'auto',
       border: 'none',
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
