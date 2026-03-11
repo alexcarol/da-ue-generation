@@ -109,7 +109,7 @@ function showPreflightDialog(report, prompt) {
     });
 
     const style = document.createElement('style');
-    style.textContent = '#ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); }';
+    style.textContent = '#ue-preflight-dialog { margin-top: 2vh; } #ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); }';
 
     const title = document.createElement('h2');
     title.textContent = 'Content will be lost';
