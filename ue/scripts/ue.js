@@ -73,6 +73,15 @@ const setupUEEventHandlers = () => {
     picture?.querySelectorAll('source').forEach((source) => source.remove());
     picture?.querySelector('img')?.removeAttribute('srcset');
   });
+
+  // TEST: proof of concept — append "done" to patched text content
+  document.body.addEventListener('aue:content-patch', ({ detail: { patch, request } }) => {
+    const element = document.querySelector(`[data-aue-resource="${request.target.resource}"]`);
+    if (!element) return;
+    const prop = element.querySelector(`[data-aue-prop='${patch.name}']`);
+    if (!prop || prop.getAttribute('data-aue-type') !== 'richtext') return;
+    prop.insertAdjacentText('beforeend', ' done');
+  });
 };
 
 export default () => {
