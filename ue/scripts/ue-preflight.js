@@ -235,7 +235,7 @@ function waitForInstrumentation() {
       }
     });
 
-    observer.observe(main, { attributes: true, subtree: true, attributeFilter: ['data-aue-resource'] });
+    observer.observe(main, { attributes: true, subtree: true, attributeFilter: ['data-aue-resource', 'data-block-status'] });
 
     // Fallback timeout — UE framework may not be active
     setTimeout(() => {
