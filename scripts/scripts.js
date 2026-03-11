@@ -187,7 +187,7 @@ async function loadPage() {
 }
 
 // UE Editor support before page load
-if (/\.(stage-ue|ue)\.da\.live$/.test(window.location.hostname)) {
+if (/\.(stage-ue|ue)\.da\.live$/.test(window.location.hostname) || window !== window.parent) {
   // eslint-disable-next-line import/no-unresolved
   await import(`${window.hlx.codeBasePath}/ue/scripts/ue.js`).then(({ default: ue }) => ue());
 }
