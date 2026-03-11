@@ -194,7 +194,9 @@ const ueModule = /\.(stage-ue|ue)\.da\.live$/.test(window.location.hostname) || 
 
 await loadPage();
 
-// Run UE preflight after page is fully loaded
+// Run UE preflight after page is fully loaded and UE has settled
 if (ueModule) {
+  // eslint-disable-next-line no-promise-executor-return
+  await new Promise((resolve) => { setTimeout(resolve, 5000); });
   ueModule.runPreflight();
 }
