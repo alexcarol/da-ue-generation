@@ -90,155 +90,37 @@ function buildAEMCoderPrompt(issues) {
   return blockNames.map((name) => `Run /ue-enable ${name}`).join('\n');
 }
 
-function showPreflightDialog(report, prompt) {
-  return new Promise((resolve) => {
-    const dialog = document.createElement('dialog');
-    dialog.id = 'ue-preflight-dialog';
-    Object.assign(dialog.style, {
-      borderRadius: '12px',
-      padding: '32px',
-      maxWidth: '640px',
-      width: '90vw',
-      maxHeight: '500px',
-      overflow: 'auto',
-      border: 'none',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-      fontFamily: 'system-ui, sans-serif',
-    });
+async function showPreflightBanner(report, prompt) {
+  // Auto-copy prompt to clipboard (iframe has allow="clipboard-write")
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(prompt);
+    copied = true;
+  } catch { /* clipboard not available */ }
 
-    const style = document.createElement('style');
-    style.textContent = `
-      #ue-preflight-dialog { margin-top: 2vh; pointer-events: auto; user-select: text; }
-      #ue-preflight-dialog * { pointer-events: auto; user-select: text; }
-      #ue-preflight-dialog::backdrop { background: rgba(0,0,0,0.6); pointer-events: auto; }
-    `;
-
-    const title = document.createElement('h2');
-    title.textContent = 'Content will be lost';
-    Object.assign(title.style, { margin: '0 0 16px', color: '#c00' });
-
-    const reportPre = document.createElement('pre');
-    reportPre.textContent = report;
-    Object.assign(reportPre.style, {
-      background: '#f5f5f5',
-      padding: '16px',
-      borderRadius: '8px',
-      fontSize: '13px',
-      whiteSpace: 'pre-wrap',
-      overflow: 'auto',
-      maxHeight: '120px',
-      margin: '0',
-    });
-
-    const copyReport = document.createElement('button');
-    copyReport.textContent = 'Copy report';
-    Object.assign(copyReport.style, {
-      marginTop: '8px',
-      padding: '6px 16px',
-      borderRadius: '6px',
-      border: '1px solid #ccc',
-      background: '#fff',
-      cursor: 'pointer',
-      fontSize: '13px',
-    });
-    copyReport.addEventListener('click', () => {
-      navigator.clipboard.writeText(report).then(() => { copyReport.textContent = 'Copied!'; });
-    });
-
-    const promptLabel = document.createElement('p');
-    promptLabel.textContent = 'Prompt for AEM Coder to fix the model:';
-    Object.assign(promptLabel.style, { margin: '16px 0 8px', fontWeight: '600' });
-
-    const promptPre = document.createElement('pre');
-    promptPre.textContent = prompt;
-    Object.assign(promptPre.style, {
-      background: '#f5f5f5',
-      padding: '16px',
-      borderRadius: '8px',
-      fontSize: '13px',
-      whiteSpace: 'pre-wrap',
-      overflow: 'auto',
-      maxHeight: '120px',
-      margin: '0',
-    });
-
-    const copyPrompt = document.createElement('button');
-    copyPrompt.textContent = 'Copy prompt';
-    Object.assign(copyPrompt.style, {
-      marginTop: '8px',
-      padding: '6px 16px',
-      borderRadius: '6px',
-      border: '1px solid #ccc',
-      background: '#fff',
-      cursor: 'pointer',
-      fontSize: '13px',
-    });
-    copyPrompt.addEventListener('click', () => {
-      navigator.clipboard.writeText(prompt).then(() => { copyPrompt.textContent = 'Copied!'; });
-    });
-
-    const actions = document.createElement('div');
-    Object.assign(actions.style, {
-      display: 'flex',
-      gap: '12px',
-      justifyContent: 'flex-end',
-      marginTop: '24px',
-    });
-
-    const goBack = document.createElement('button');
-    goBack.textContent = 'Go back';
-    Object.assign(goBack.style, {
-      padding: '10px 24px',
-      borderRadius: '6px',
-      border: 'none',
-      background: '#0265dc',
-      color: '#fff',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontSize: '14px',
-    });
-
-    const continueBtn = document.createElement('button');
-    continueBtn.textContent = 'Continue anyway — content will be lost';
-    Object.assign(continueBtn.style, {
-      padding: '10px 24px',
-      borderRadius: '6px',
-      border: '1px solid #c00',
-      background: 'transparent',
-      color: '#c00',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontSize: '14px',
-    });
-
-    goBack.addEventListener('click', () => {
-      dialog.close();
-      window.history.back();
-    });
-
-    continueBtn.addEventListener('click', () => {
-      dialog.close();
-      dialog.remove();
-      resolve();
-    });
-
-    // Prevent closing with Escape — force user to choose
-    dialog.addEventListener('cancel', (e) => e.preventDefault());
-
-    actions.append(goBack, continueBtn);
-    dialog.append(
-      style,
-      title,
-      reportPre,
-      copyReport,
-      promptLabel,
-      promptPre,
-      copyPrompt,
-      actions,
-    );
-    document.body.append(dialog);
-    dialog.showModal();
+  const banner = document.createElement('div');
+  banner.id = 'ue-preflight-banner';
+  Object.assign(banner.style, {
+    position: 'fixed',
+    top: '0',
+    left: '0',
+    right: '0',
+    zIndex: '2147483647',
+    background: '#c00',
+    color: '#fff',
+    padding: '16px 24px',
+    fontFamily: 'system-ui, sans-serif',
+    fontSize: '14px',
+    lineHeight: '1.5',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
   });
+
+  const clipboardMsg = copied
+    ? 'Fix prompt auto-copied to clipboard — paste into AEM Coder.'
+    : 'Check browser console for the fix prompt.';
+
+  banner.innerHTML = `<strong>⚠ Content at risk:</strong> ${report}<br>${clipboardMsg}`;
+  document.documentElement.append(banner);
 }
 
 export default async function runPreflight() {
@@ -255,5 +137,5 @@ export default async function runPreflight() {
   const prompt = buildAEMCoderPrompt(issues);
   // eslint-disable-next-line no-console
   console.warn(`[ue-preflight] ${issues.length} issue(s) found:\n${report}\nPrompt:\n${prompt}`);
-  await showPreflightDialog(report, prompt);
+  await showPreflightBanner(report, prompt);
 }
