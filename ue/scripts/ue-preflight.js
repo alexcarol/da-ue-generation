@@ -218,29 +218,31 @@ function waitForInstrumentation() {
       return;
     }
 
-    // If already instrumented, resolve after settle delay
-    if (main.querySelector('.block[data-aue-resource]')) {
-      setTimeout(resolve, SETTLE_DELAY);
-      return;
-    }
+    let resolved = false;
+    const done = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve();
+    };
 
-    let settled;
-    const observer = new MutationObserver(() => {
+    const poll = () => {
+      if (resolved) return;
       if (main.querySelector('.block[data-aue-resource]')) {
-        clearTimeout(settled);
-        settled = setTimeout(() => {
-          observer.disconnect();
-          resolve();
-        }, SETTLE_DELAY);
+        // eslint-disable-next-line no-console
+        console.debug('[ue-preflight] blocks instrumented, settling…');
+        setTimeout(done, SETTLE_DELAY);
+        return;
       }
-    });
+      setTimeout(poll, 200);
+    };
 
-    observer.observe(main, { attributes: true, subtree: true, attributeFilter: ['data-aue-resource', 'data-block-status'] });
+    poll();
 
     // Fallback timeout — UE framework may not be active
     setTimeout(() => {
-      observer.disconnect();
-      resolve();
+      // eslint-disable-next-line no-console
+      console.debug('[ue-preflight] timeout waiting for instrumentation');
+      done();
     }, INSTRUMENTATION_TIMEOUT);
   });
 }
@@ -248,7 +250,13 @@ function waitForInstrumentation() {
 export default async function runPreflight() {
   await waitForInstrumentation();
 
+  const blocks = document.querySelectorAll('main .block[data-aue-resource]');
+  // eslint-disable-next-line no-console
+  console.debug(`[ue-preflight] scanning ${blocks.length} instrumented block(s)`);
+
   const issues = scanForUninstrumentedContent();
+  // eslint-disable-next-line no-console
+  console.debug(`[ue-preflight] found ${issues.length} issue(s)`, issues);
   if (issues.length === 0) return;
 
   const report = buildPreflightReport(issues);
