@@ -210,15 +210,17 @@ function showPreflightDialog(report, prompt) {
 
 export default async function runPreflight() {
   const blocks = document.querySelectorAll('main .block[data-aue-resource]');
-  // eslint-disable-next-line no-console
-  console.debug(`[ue-preflight] scanning ${blocks.length} instrumented block(s)`);
-
   const issues = scanForUninstrumentedContent();
-  // eslint-disable-next-line no-console
-  console.debug(`[ue-preflight] found ${issues.length} issue(s)`, issues);
-  if (issues.length === 0) return;
+
+  if (issues.length === 0) {
+    // eslint-disable-next-line no-console
+    console.warn('[ue-preflight] No issues found across', blocks.length, 'block(s)');
+    return;
+  }
 
   const report = buildPreflightReport(issues);
   const prompt = buildAEMCoderPrompt(issues);
+  // eslint-disable-next-line no-console
+  console.warn(`[ue-preflight] ${issues.length} issue(s) found:\n${report}\nPrompt:\n${prompt}`);
   await showPreflightDialog(report, prompt);
 }
