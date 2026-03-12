@@ -137,5 +137,11 @@ export default async function runPreflight() {
   const prompt = buildAEMCoderPrompt(issues);
   // eslint-disable-next-line no-console
   console.warn(`[ue-preflight] ${issues.length} issue(s) found:\n${report}\nPrompt:\n${prompt}`);
+  issues.forEach(({ blockName, uninstrumented }) => {
+    uninstrumented.forEach(({ description }) => {
+      // eslint-disable-next-line no-console
+      console.warn(`[ue-preflight]   ${blockName}: ${description}`);
+    });
+  });
   await showPreflightBanner(report, prompt);
 }
